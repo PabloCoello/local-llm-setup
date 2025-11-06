@@ -58,7 +58,7 @@ Copy this key - you'll need it for VSCode.
 
 1. Install **Continue** extension in VSCode
 2. Open Continue settings (click gear icon)
-3. Copy config from `vscode-continue-config.json`
+3. Copy config from `vscode-continue-config.yaml`
 4. Replace `sk-1234-change-me-to-secure-key` with your actual API key
 5. Save and start coding!
 

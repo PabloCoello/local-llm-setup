@@ -24,11 +24,11 @@ Continue is an open-source AI code assistant extension for VSCode that provides:
 
 1. Click on the Continue icon in the left sidebar
 2. Click the gear icon (⚙️) in the Continue panel
-3. This opens `~/.continue/config.json`
+3. This opens `~/.continue/config.yaml`
 
 ### Step 2: Configure Your Local LLM
 
-Replace the contents of `config.json` with the configuration from `vscode-continue-config.json` in this repository.
+Replace the contents of `config.yaml` with the configuration from `vscode-continue-config.yaml` in this repository.
 
 **Important**: Update the `apiKey` fields with your actual API key from the `.env` file:
 
@@ -40,91 +40,74 @@ cat .env | grep LITELLM_MASTER_KEY
 ### Step 3: Update API Base URL
 
 For **local development** (same computer):
-```json
-"apiBase": "http://localhost:4000"
+```yaml
+apiBase: http://localhost:4000
 ```
 
 For **local network access**:
-```json
-"apiBase": "http://<your-local-ip>:8080"
+```yaml
+apiBase: http://<your-local-ip>:8080
 ```
 
 For **internet access**:
-```json
-"apiBase": "https://<your-domain-or-ip>"
+```yaml
+apiBase: https://<your-domain-or-ip>
 ```
 
 ### Complete Configuration Example
 
-```json
-{
-  "models": [
-    {
-      "title": "DeepSeek Coder 33B",
-      "provider": "openai",
-      "model": "deepseek-coder",
-      "apiBase": "http://localhost:4000",
-      "apiKey": "sk-your-actual-api-key-here",
-      "contextLength": 16384,
-      "completionOptions": {
-        "temperature": 0.2,
-        "topP": 0.95,
-        "presencePenalty": 0.0,
-        "frequencyPenalty": 0.0
-      }
-    },
-    {
-      "title": "Qwen Coder 32B",
-      "provider": "openai",
-      "model": "qwen-coder",
-      "apiBase": "http://localhost:4000",
-      "apiKey": "sk-your-actual-api-key-here",
-      "contextLength": 32768,
-      "completionOptions": {
-        "temperature": 0.2,
-        "topP": 0.95
-      }
-    },
-    {
-      "title": "Mistral (Fast)",
-      "provider": "openai",
-      "model": "mistral",
-      "apiBase": "http://localhost:4000",
-      "apiKey": "sk-your-actual-api-key-here",
-      "contextLength": 8192,
-      "completionOptions": {
-        "temperature": 0.7,
-        "topP": 0.95
-      }
-    }
-  ],
-  "tabAutocompleteModel": {
-    "title": "DeepSeek Coder 33B (Autocomplete)",
-    "provider": "openai",
-    "model": "deepseek-coder",
-    "apiBase": "http://localhost:4000",
-    "apiKey": "sk-your-actual-api-key-here"
-  },
-  "customCommands": [
-    {
-      "name": "test",
-      "prompt": "Write a comprehensive test suite for the selected code"
-    },
-    {
-      "name": "doc",
-      "prompt": "Write detailed documentation for the selected code"
-    },
-    {
-      "name": "optimize",
-      "prompt": "Suggest optimizations for the selected code"
-    },
-    {
-      "name": "explain",
-      "prompt": "Explain what the selected code does in detail"
-    }
-  ],
-  "allowAnonymousTelemetry": false
-}
+```yaml
+models:
+  - title: DeepSeek Coder 33B
+    provider: openai
+    model: deepseek-coder
+    apiBase: http://localhost:4000
+    apiKey: sk-your-actual-api-key-here
+    contextLength: 16384
+    completionOptions:
+      temperature: 0.2
+      topP: 0.95
+      presencePenalty: 0.0
+      frequencyPenalty: 0.0
+
+  - title: Qwen Coder 32B
+    provider: openai
+    model: qwen-coder
+    apiBase: http://localhost:4000
+    apiKey: sk-your-actual-api-key-here
+    contextLength: 32768
+    completionOptions:
+      temperature: 0.2
+      topP: 0.95
+
+  - title: Mistral (Fast)
+    provider: openai
+    model: mistral
+    apiBase: http://localhost:4000
+    apiKey: sk-your-actual-api-key-here
+    contextLength: 8192
+    completionOptions:
+      temperature: 0.7
+      topP: 0.95
+
+tabAutocompleteModel:
+  title: DeepSeek Coder 33B (Autocomplete)
+  provider: openai
+  model: deepseek-coder
+  apiBase: http://localhost:4000
+  apiKey: sk-your-actual-api-key-here
+
+customCommands:
+  - name: test
+    prompt: Write a comprehensive test suite for the selected code
+  - name: doc
+    prompt: Write detailed documentation for the selected code
+  - name: optimize
+    prompt: Suggest optimizations for the selected code
+  - name: explain
+    prompt: Explain what the selected code does in detail
+
+allowAnonymousTelemetry: false
 ```
 
 ## Usage
@@ -168,32 +151,29 @@ Choose different models based on your needs:
 ### For Code Completions (Fast)
 Use `deepseek-coder:6.7b` or `mistral:latest` for faster autocomplete:
 
-```json
-"tabAutocompleteModel": {
-  "model": "mistral",
-  "apiBase": "http://localhost:4000",
-  "apiKey": "sk-your-api-key"
-}
+```yaml
+tabAutocompleteModel:
+  model: mistral
+  apiBase: http://localhost:4000
+  apiKey: sk-your-api-key
 ```
 
 ### For Code Generation (Quality)
 Use `deepseek-coder:33b` or `qwen2.5-coder:32b` for high-quality code:
 
-```json
-{
-  "model": "deepseek-coder",
-  "apiBase": "http://localhost:4000"
-}
+```yaml
+models:
+  - model: deepseek-coder
+    apiBase: http://localhost:4000
 ```
 
 ### For General Questions
 Use `mistral:latest` for faster responses:
 
-```json
-{
-  "model": "mistral",
-  "apiBase": "http://localhost:4000"
-}
+```yaml
+models:
+  - model: mistral
+    apiBase: http://localhost:4000
 ```
 
 ## Performance Tips
@@ -206,33 +186,30 @@ docker exec ollama ollama pull deepseek-coder:6.7b
 ```
 
 Update Continue config:
-```json
-"tabAutocompleteModel": {
-  "model": "deepseek-coder:6.7b"
-}
+```yaml
+tabAutocompleteModel:
+  model: deepseek-coder:6.7b
 ```
 
 ### 2. Adjust Temperature
 
 Lower temperature for more deterministic code:
-```json
-"completionOptions": {
-  "temperature": 0.1  // More deterministic
-}
+```yaml
+completionOptions:
+  temperature: 0.1  # More deterministic
 ```
 
 Higher temperature for more creative code:
-```json
-"completionOptions": {
-  "temperature": 0.8  // More creative
-}
+```yaml
+completionOptions:
+  temperature: 0.8  # More creative
 ```
 
 ### 3. Context Length
 
 Reduce context length for faster responses:
-```json
-"contextLength": 4096  // Instead of 16384
+```yaml
+contextLength: 4096  # Instead of 16384
 ```
 
 ### 4. Disable Autocomplete if Too Slow
@@ -299,70 +276,45 @@ docker-compose restart litellm
 
 Create different profiles for different tasks:
 
-```json
-{
-  "models": [
-    {
-      "title": "Fast (Autocomplete)",
-      "model": "mistral",
-      "completionOptions": {
-        "temperature": 0.1,
-        "maxTokens": 100
-      }
-    },
-    {
-      "title": "Quality (Code Review)",
-      "model": "deepseek-coder",
-      "completionOptions": {
-        "temperature": 0.3,
-        "maxTokens": 2000
-      }
-    },
-    {
-      "title": "Creative (Brainstorming)",
-      "model": "qwen-coder",
-      "completionOptions": {
-        "temperature": 0.9,
-        "maxTokens": 1000
-      }
-    }
-  ]
-}
+```yaml
+models:
+  - title: Fast (Autocomplete)
+    model: mistral
+    completionOptions:
+      temperature: 0.1
+      maxTokens: 100
+
+  - title: Quality (Code Review)
+    model: deepseek-coder
+    completionOptions:
+      temperature: 0.3
+      maxTokens: 2000
+
+  - title: Creative (Brainstorming)
+    model: qwen-coder
+    completionOptions:
+      temperature: 0.9
+      maxTokens: 1000
 ```
 
 ### Context Providers
 
 Enable additional context sources:
 
-```json
-{
-  "contextProviders": [
-    {
-      "name": "code",
-      "params": {}
-    },
-    {
-      "name": "diff",
-      "params": {}
-    },
-    {
-      "name": "terminal",
-      "params": {}
-    },
-    {
-      "name": "problems",
-      "params": {}
-    },
-    {
-      "name": "folder",
-      "params": {}
-    },
-    {
-      "name": "codebase",
-      "params": {}
-    }
-  ]
-}
+```yaml
+contextProviders:
+  - name: code
+    params: {}
+  - name: diff
+    params: {}
+  - name: terminal
+    params: {}
+  - name: problems
+    params: {}
+  - name: folder
+    params: {}
+  - name: codebase
+    params: {}
 ```
 
 ## Comparison with GitHub Copilot

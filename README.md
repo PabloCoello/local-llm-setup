@@ -123,7 +123,7 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 
 1. Install Continue extension in VSCode
 2. Get your API key: `cat .env | grep LITELLM_MASTER_KEY`
-3. Copy config from `vscode-continue-config.json`
+3. Copy config from `vscode-continue-config.yaml`
 4. Update API key in Continue settings
 5. Start coding with AI assistance!
 
@@ -275,7 +275,7 @@ local-llm-setup/
 │   ├── SECURITY.md                # Security best practices
 │   ├── API_USAGE.md               # API examples
 │   └── MODELS.md                  # Model recommendations
-└── vscode-continue-config.json    # Continue extension config
+└── vscode-continue-config.yaml    # Continue extension config
 ```
 
 ## 🤝 Contributing

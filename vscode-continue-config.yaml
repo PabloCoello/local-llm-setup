@@ -1,0 +1,93 @@
+models:
+  - title: DeepSeek Coder 33B
+    provider: openai
+    model: deepseek-coder
+    apiBase: http://localhost:4000
+    apiKey: sk-1234-change-me-to-secure-key
+    contextLength: 16384
+    completionOptions:
+      temperature: 0.2
+      topP: 0.95
+      presencePenalty: 0.0
+      frequencyPenalty: 0.0
+
+  - title: Qwen Coder 32B
+    provider: openai
+    model: qwen-coder
+    apiBase: http://localhost:4000
+    apiKey: sk-1234-change-me-to-secure-key
+    contextLength: 32768
+    completionOptions:
+      temperature: 0.2
+      topP: 0.95
+
+  - title: CodeLlama 34B
+    provider: openai
+    model: codellama
+    apiBase: http://localhost:4000
+    apiKey: sk-1234-change-me-to-secure-key
+    contextLength: 16384
+    completionOptions:
+      temperature: 0.2
+      topP: 0.95
+
+  - title: Mistral (Fast)
+    provider: openai
+    model: mistral
+    apiBase: http://localhost:4000
+    apiKey: sk-1234-change-me-to-secure-key
+    contextLength: 8192
+    completionOptions:
+      temperature: 0.7
+      topP: 0.95
+
+tabAutocompleteModel:
+  title: DeepSeek Coder 33B (Autocomplete)
+  provider: openai
+  model: deepseek-coder
+  apiBase: http://localhost:4000
+  apiKey: sk-1234-change-me-to-secure-key
+
+embeddingsProvider:
+  provider: openai
+  model: text-embedding-ada-002
+  apiBase: http://localhost:4000
+  apiKey: sk-1234-change-me-to-secure-key
+
+customCommands:
+  - name: test
+    prompt: Write a comprehensive test suite for the selected code
+  - name: doc
+    prompt: Write detailed documentation for the selected code
+  - name: optimize
+    prompt: Suggest optimizations for the selected code
+  - name: explain
+    prompt: Explain what the selected code does in detail
+
+contextProviders:
+  - name: code
+    params: {}
+  - name: diff
+    params: {}
+  - name: terminal
+    params: {}
+  - name: problems
+    params: {}
+  - name: folder
+    params: {}
+  - name: codebase
+    params: {}
+
+slashCommands:
+  - name: edit
+    description: Edit selected code
+  - name: comment
+    description: Add comments to code
+  - name: share
+    description: Share conversation
+  - name: cmd
+    description: Generate shell command
+  - name: commit
+    description: Generate commit message
+
+allowAnonymousTelemetry: false
