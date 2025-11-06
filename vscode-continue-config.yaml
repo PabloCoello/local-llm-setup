@@ -64,6 +64,18 @@ models:
       temperature: 0.5
       topP: 0.95
 
+  - name: Mixtral 8x7B
+    provider: openai
+    model: mixtral
+    apiBase: http://localhost:4000
+    apiKey: sk-1234-change-me-to-secure-key
+    roles:
+      - chat
+    defaultCompletionOptions:
+      contextLength: 8192
+      temperature: 0.5
+      topP: 0.95
+
   - name: DeepSeek Coder 33B (Autocomplete)
     provider: openai
     model: deepseek-coder
