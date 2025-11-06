@@ -1,0 +1,21 @@
+{
+  "name": "local-llm-examples",
+  "version": "1.0.0",
+  "description": "Examples for using local LLM API",
+  "type": "module",
+  "scripts": {
+    "chat": "node chat_example.js",
+    "stream": "node streaming_example.js"
+  },
+  "dependencies": {
+    "openai": "^4.0.0"
+  },
+  "keywords": [
+    "llm",
+    "ai",
+    "openai",
+    "local"
+  ],
+  "author": "",
+  "license": "MIT"
+}
