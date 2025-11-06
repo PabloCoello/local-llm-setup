@@ -17,18 +17,18 @@ model_list:
       model: ollama/codellama:34b
       api_base: http://ollama:11434
   
-  # Llama 3 models - state of the art
-  - model_name: llama3
-    litellm_params:
-      model: ollama/llama3:70b
-      api_base: http://ollama:11434
-  
   # Mixtral - high performance mixture of experts
   - model_name: mixtral
     litellm_params:
       model: ollama/mixtral:8x7b
       api_base: http://ollama:11434
   
+  # GPT-OSS - general purpose
+  - model_name: gpt-oss
+    litellm_params:
+      model: ollama/gpt-oss:latest
+      api_base: http://ollama:11434
+
   # Qwen Coder - excellent code model
   - model_name: qwen-coder
     litellm_params:
