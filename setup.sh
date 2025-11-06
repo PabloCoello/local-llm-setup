@@ -1,0 +1,143 @@
+#!/bin/bash
+
+set -e
+
+echo "======================================"
+echo "Local LLM Setup - Installation Script"
+echo "======================================"
+echo ""
+
+# Check if running as root
+if [ "$EUID" -eq 0 ]; then 
+    echo "Please do not run this script as root"
+    exit 1
+fi
+
+# Check for required commands
+command -v docker >/dev/null 2>&1 || { echo "Error: docker is required but not installed. Please install Docker first."; exit 1; }
+command -v docker-compose >/dev/null 2>&1 || command -v docker compose >/dev/null 2>&1 || { echo "Error: docker-compose is required but not installed."; exit 1; }
+
+# Create .env file if it doesn't exist
+if [ ! -f .env ]; then
+    echo "Creating .env file from template..."
+    cp .env.example .env
+    
+    # Generate random master key
+    RANDOM_KEY="sk-$(openssl rand -hex 32)"
+    sed -i "s|LITELLM_MASTER_KEY=.*|LITELLM_MASTER_KEY=$RANDOM_KEY|" .env
+    
+    echo "Generated random API key. Check .env file for details."
+fi
+
+# Source .env file
+set -a
+source .env
+set +a
+
+# Create SSL certificates
+if [ ! -f config/ssl/cert.pem ] || [ ! -f config/ssl/key.pem ]; then
+    echo ""
+    echo "Generating self-signed SSL certificates..."
+    mkdir -p config/ssl
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        -keyout config/ssl/key.pem \
+        -out config/ssl/cert.pem \
+        -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
+    echo "SSL certificates generated."
+fi
+
+# Create .htpasswd file for Nginx basic auth
+if [ ! -f config/.htpasswd ]; then
+    echo ""
+    echo "Creating Nginx authentication file..."
+    mkdir -p config
+    
+    # Check if htpasswd is available
+    if command -v htpasswd >/dev/null 2>&1; then
+        htpasswd -cb config/.htpasswd "${NGINX_USER:-admin}" "${NGINX_PASSWORD:-admin}"
+    else
+        # Fallback to openssl if htpasswd is not available
+        echo "${NGINX_USER:-admin}:$(openssl passwd -apr1 ${NGINX_PASSWORD:-admin})" > config/.htpasswd
+    fi
+    echo "Authentication file created."
+fi
+
+# Pull required Docker images
+echo ""
+echo "Pulling Docker images (this may take a while)..."
+docker-compose pull
+
+# Start services
+echo ""
+echo "Starting services..."
+docker-compose up -d
+
+# Wait for Ollama to be ready
+echo ""
+echo "Waiting for Ollama to start..."
+sleep 10
+
+# Pull initial models
+echo ""
+echo "Would you like to download initial LLM models?"
+echo "Recommended for RTX 3090 (24GB VRAM):"
+echo "  1. deepseek-coder:33b (Code generation, ~20GB)"
+echo "  2. codellama:34b (Code generation, ~20GB)"
+echo "  3. qwen2.5-coder:32b (Code generation, ~20GB)"
+echo "  4. mistral:latest (General purpose, ~4GB)"
+echo "  5. Skip for now"
+echo ""
+read -p "Enter your choice (1-5): " model_choice
+
+case $model_choice in
+    1)
+        echo "Pulling deepseek-coder:33b..."
+        docker exec ollama ollama pull deepseek-coder:33b
+        ;;
+    2)
+        echo "Pulling codellama:34b..."
+        docker exec ollama ollama pull codellama:34b
+        ;;
+    3)
+        echo "Pulling qwen2.5-coder:32b..."
+        docker exec ollama ollama pull qwen2.5-coder:32b
+        ;;
+    4)
+        echo "Pulling mistral:latest..."
+        docker exec ollama ollama pull mistral:latest
+        ;;
+    5)
+        echo "Skipping model download."
+        ;;
+    *)
+        echo "Invalid choice. Skipping model download."
+        ;;
+esac
+
+echo ""
+echo "======================================"
+echo "Installation Complete!"
+echo "======================================"
+echo ""
+echo "Services are running:"
+echo "  - Ollama: http://localhost:11434"
+echo "  - LiteLLM API: http://localhost:4000"
+echo "  - Nginx Proxy (HTTPS): https://localhost"
+echo "  - Nginx Proxy (Internal): http://localhost:8080"
+echo ""
+echo "API Key: $LITELLM_MASTER_KEY"
+echo ""
+echo "To download additional models:"
+echo "  docker exec ollama ollama pull <model-name>"
+echo ""
+echo "To view logs:"
+echo "  docker-compose logs -f"
+echo ""
+echo "To stop services:"
+echo "  docker-compose down"
+echo ""
+echo "Next steps:"
+echo "  1. Review and update .env file with your settings"
+echo "  2. Configure your VSCode Continue extension (see vscode-continue-config.yaml)"
+echo "  3. Set up port forwarding on your router for external access (optional)"
+echo ""

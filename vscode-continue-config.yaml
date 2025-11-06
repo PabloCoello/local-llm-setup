@@ -1,0 +1,111 @@
+name: Local LLM Setup
+version: "1.0"
+
+models:
+  - name: DeepSeek Coder 33B
+    provider: openai
+    model: deepseek-coder
+    apiBase: http://localhost:4000
+    apiKey: sk-1234-change-me-to-secure-key
+    roles:
+      - chat
+    defaultCompletionOptions:
+      contextLength: 16384
+      temperature: 0.2
+      topP: 0.95
+      presencePenalty: 0.0
+      frequencyPenalty: 0.0
+
+  - name: Qwen Coder 32B
+    provider: openai
+    model: qwen-coder
+    apiBase: http://localhost:4000
+    apiKey: sk-1234-change-me-to-secure-key
+    roles:
+      - chat
+    defaultCompletionOptions:
+      contextLength: 32768
+      temperature: 0.2
+      topP: 0.95
+
+  - name: CodeLlama 34B
+    provider: openai
+    model: codellama
+    apiBase: http://localhost:4000
+    apiKey: sk-1234-change-me-to-secure-key
+    roles:
+      - chat
+    defaultCompletionOptions:
+      contextLength: 16384
+      temperature: 0.2
+      topP: 0.95
+
+  - name: Mistral (Fast)
+    provider: openai
+    model: mistral
+    apiBase: http://localhost:4000
+    apiKey: sk-1234-change-me-to-secure-key
+    roles:
+      - chat
+    defaultCompletionOptions:
+      contextLength: 8192
+      temperature: 0.7
+      topP: 0.95
+
+  - name: GPT-OSS (General)
+    provider: openai
+    model: gpt-oss
+    apiBase: http://localhost:4000
+    apiKey: sk-1234-change-me-to-secure-key
+    roles:
+      - chat
+    defaultCompletionOptions:
+      contextLength: 8192
+      temperature: 0.5
+      topP: 0.95
+
+  - name: Mixtral 8x7B
+    provider: openai
+    model: mixtral
+    apiBase: http://localhost:4000
+    apiKey: sk-1234-change-me-to-secure-key
+    roles:
+      - chat
+    defaultCompletionOptions:
+      contextLength: 8192
+      temperature: 0.5
+      topP: 0.95
+
+  - name: DeepSeek Coder 33B (Autocomplete)
+    provider: openai
+    model: deepseek-coder
+    apiBase: http://localhost:4000
+    apiKey: sk-1234-change-me-to-secure-key
+    roles:
+      - autocomplete
+
+  - name: Text Embeddings
+    provider: openai
+    model: text-embedding-ada-002
+    apiBase: http://localhost:4000
+    apiKey: sk-1234-change-me-to-secure-key
+    roles:
+      - embed
+
+prompts:
+  - name: test
+    prompt: Write a comprehensive test suite for the selected code
+  - name: doc
+    prompt: Write detailed documentation for the selected code
+  - name: optimize
+    prompt: Suggest optimizations for the selected code
+  - name: explain
+    prompt: Explain what the selected code does in detail
+
+context:
+  - provider: code
+  - provider: diff
+  - provider: terminal
+  - provider: problems
+  - provider: folder
+  - provider: codebase

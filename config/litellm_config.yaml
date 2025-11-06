@@ -1,0 +1,54 @@
+model_list:
+  # DeepSeek Coder models - excellent for code generation
+  - model_name: deepseek-coder
+    litellm_params:
+      model: ollama/deepseek-coder:33b
+      api_base: http://ollama:11434
+  
+  # Mistral models - balanced performance
+  - model_name: mistral
+    litellm_params:
+      model: ollama/mistral:latest
+      api_base: http://ollama:11434
+  
+  # CodeLlama models - specialized for code
+  - model_name: codellama
+    litellm_params:
+      model: ollama/codellama:34b
+      api_base: http://ollama:11434
+  
+  # Mixtral - high performance mixture of experts
+  - model_name: mixtral
+    litellm_params:
+      model: ollama/mixtral:8x7b
+      api_base: http://ollama:11434
+  
+  # GPT-OSS - general purpose
+  - model_name: gpt-oss
+    litellm_params:
+      model: ollama/gpt-oss:latest
+      api_base: http://ollama:11434
+
+  # Qwen Coder - excellent code model
+  - model_name: qwen-coder
+    litellm_params:
+      model: ollama/qwen2.5-coder:32b
+      api_base: http://ollama:11434
+
+litellm_settings:
+  drop_params: True
+  set_verbose: True
+  request_timeout: 600
+  telemetry: False
+
+general_settings:
+  master_key: "os.environ/LITELLM_MASTER_KEY"
+  database_url: "postgresql://litellm:litellm@litellm-db:5432/litellm"
+  
+  # Rate limiting configuration
+  max_parallel_requests: 100
+  max_internal_user_budget: null
+  
+  # Security settings
+  enable_jwt_auth: false
+  enable_oauth: false
