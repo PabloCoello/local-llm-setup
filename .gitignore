@@ -205,3 +205,10 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Local LLM Setup specific
+config/.htpasswd
+config/ssl/*.pem
+config/ssl/*.key
+.env
+*.tar.gz
