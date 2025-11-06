@@ -21,7 +21,8 @@ echo ""
 
 # Test health endpoint
 echo "1. Testing health endpoint..."
-curl -s "$API_BASE/health" | jq '.' 2>/dev/null || curl -s "$API_BASE/health"
+curl -s -H "Authorization: Bearer $API_KEY" \
+     "$API_BASE/health" | jq '.' 2>/dev/null || curl -s -H "Authorization: Bearer $API_KEY" "$API_BASE/health"
 echo ""
 echo ""
 

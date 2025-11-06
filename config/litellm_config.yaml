@@ -42,8 +42,8 @@ litellm_settings:
   telemetry: False
 
 general_settings:
-  master_key: ${LITELLM_MASTER_KEY}
-  database_url: "sqlite:////app/litellm.db"
+  master_key: "os.environ/LITELLM_MASTER_KEY"
+  database_url: "postgresql://litellm:litellm@litellm-db:5432/litellm"
   
   # Rate limiting configuration
   max_parallel_requests: 100

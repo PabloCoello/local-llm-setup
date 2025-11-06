@@ -34,10 +34,24 @@ services:
       - ./config/litellm_config.yaml:/app/config.yaml
     environment:
       - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-sk-1234}
-      - DATABASE_URL=sqlite:////app/litellm.db
+      - DATABASE_URL=postgresql://litellm:litellm@litellm-db:5432/litellm
     command: --config /app/config.yaml --port 4000
     depends_on:
       - ollama
+      - litellm-db
+    networks:
+      - llm-network
+
+  litellm-db:
+    image: postgres:16-alpine
+    container_name: litellm-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: litellm
+      POSTGRES_PASSWORD: litellm
+      POSTGRES_DB: litellm
+    volumes:
+      - litellm_db_data:/var/lib/postgresql/data
     networks:
       - llm-network
 
@@ -60,6 +74,8 @@ services:
 
 volumes:
   ollama_data:
+    driver: local
+  litellm_db_data:
     driver: local
 
 networks:
