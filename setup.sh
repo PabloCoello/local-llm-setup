@@ -30,6 +30,9 @@ if [ ! -f .env ]; then
     RANDOM_PASSWORD="$(openssl rand -base64 24)"
     sed -i.bak "s|NGINX_PASSWORD=.*|NGINX_PASSWORD=$RANDOM_PASSWORD|" .env
     
+    # Clean up backup files
+    rm -f .env.bak
+    
     echo "✓ Generated random API key and password"
     echo "⚠️  IMPORTANT: Save these credentials securely!"
 else
@@ -48,11 +51,23 @@ if [ -z "$LITELLM_MASTER_KEY" ] || [ "$LITELLM_MASTER_KEY" = "sk-1234-change-me-
     exit 1
 fi
 
+# Check if NGINX_PASSWORD is empty or unset
+if [ -z "$NGINX_PASSWORD" ]; then
+    echo "❌ ERROR: NGINX_PASSWORD is not set in .env file"
+    echo "Please edit .env file and set a secure password"
+    exit 1
+fi
+
 if [ "$NGINX_PASSWORD" = "change-me-secure-password" ]; then
     echo "⚠️  WARNING: NGINX_PASSWORD uses default value. Generating random password..."
     RANDOM_PASSWORD="$(openssl rand -base64 24)"
     sed -i.bak "s|NGINX_PASSWORD=.*|NGINX_PASSWORD=$RANDOM_PASSWORD|" .env
     source .env
+    if [ "$NGINX_PASSWORD" = "change-me-secure-password" ]; then
+        echo "❌ ERROR: Failed to update NGINX_PASSWORD in .env file."
+        echo "Please check .env file and update NGINX_PASSWORD manually."
+        exit 1
+    fi
 fi
 
 # Create SSL certificates
@@ -79,7 +94,7 @@ if [ ! -f config/.htpasswd ]; then
         echo "✓ Authentication file created with htpasswd"
     else
         # Fallback to openssl if htpasswd is not available
-        echo "${NGINX_USER:-admin}:$(openssl passwd -apr1 ${NGINX_PASSWORD})" > config/.htpasswd
+        echo "${NGINX_USER:-admin}:$(openssl passwd -apr1 "${NGINX_PASSWORD}")" > config/.htpasswd
         echo "✓ Authentication file created with openssl"
         echo "⚠️  WARNING: htpasswd command not found. Consider installing apache2-utils"
     fi
@@ -89,6 +104,9 @@ if [ ! -f config/.htpasswd ]; then
         echo "❌ ERROR: Failed to create .htpasswd file"
         exit 1
     fi
+    
+    # Set restrictive permissions
+    chmod 600 config/.htpasswd
     
     echo "✓ Nginx credentials: User=${NGINX_USER:-admin}"
 else
