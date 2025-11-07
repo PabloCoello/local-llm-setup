@@ -44,6 +44,8 @@ Complete Docker-based setup for running state-of-the-art open-source LLMs locall
 
 ## 🚦 Quick Start
 
+⚠️ **SECURITY WARNING**: Before exposing to internet, read [SECURITY_CHECKLIST.md](SECURITY_CHECKLIST.md)
+
 ### Prerequisites
 
 - **Hardware**: NVIDIA RTX 3090 (or similar GPU with 16GB+ VRAM)
@@ -84,6 +86,9 @@ docker exec ollama ollama pull deepseek-coder:33b
 ```bash
 # Test API connectivity
 ./scripts/test-api.sh
+
+# Verify security configuration
+./scripts/security-check.sh
 ```
 
 ## 📖 Documentation

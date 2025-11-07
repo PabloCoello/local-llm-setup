@@ -7,12 +7,12 @@ services:
     container_name: ollama
     restart: unless-stopped
     ports:
-      - "11434:11434"
+      - "127.0.0.1:11434:11434"  # Solo localhost - no exponer a internet
     volumes:
       - ollama_data:/root/.ollama
     environment:
       - OLLAMA_HOST=0.0.0.0:11434
-      - OLLAMA_ORIGINS=*
+      - OLLAMA_ORIGINS=http://litellm:4000,http://127.0.0.1:*,http://localhost:*  # Solo origenes confiables
     deploy:
       resources:
         reservations:
@@ -29,11 +29,11 @@ services:
     container_name: litellm
     restart: unless-stopped
     ports:
-      - "4000:4000"
+      - "127.0.0.1:4000:4000"  # Solo localhost - acceso via nginx únicamente
     volumes:
       - ./config/litellm_config.yaml:/app/config.yaml
     environment:
-      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-sk-1234}
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}  # Obligatorio - sin valor por defecto
       - DATABASE_URL=postgresql://litellm:litellm@litellm-db:5432/litellm
     command: --config /app/config.yaml --port 4000
     depends_on:
