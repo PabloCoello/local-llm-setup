@@ -28,7 +28,7 @@ if [ ! -f .env ]; then
     
     # Generate random password
     RANDOM_PASSWORD="$(openssl rand -base64 24)"
-    sed -i.bak "s|NGINX_PASSWORD=.*|NGINX_PASSWORD=$RANDOM_PASSWORD|" .env
+    sed -i.bak "s|NGINX_PASSWORD=.*|NGINX_PASSWORD=\"$RANDOM_PASSWORD\"|" .env
     
     # Clean up backup files
     rm -f .env.bak
@@ -61,9 +61,9 @@ fi
 if [ "$NGINX_PASSWORD" = "change-me-secure-password" ]; then
     echo "⚠️  WARNING: NGINX_PASSWORD uses default value. Generating random password..."
     RANDOM_PASSWORD="$(openssl rand -base64 24)"
-    sed -i.bak "s|NGINX_PASSWORD=.*|NGINX_PASSWORD=$RANDOM_PASSWORD|" .env
+    sed -i.bak "s|NGINX_PASSWORD=.*|NGINX_PASSWORD=\"$RANDOM_PASSWORD\"|" .env
     source .env
-    if [ "$NGINX_PASSWORD" = "change-me-secure-password" ]; then
+    if [ "$NGINX_PASSWORD" != "$RANDOM_PASSWORD" ]; then
         echo "❌ ERROR: Failed to update NGINX_PASSWORD in .env file."
         echo "Please check .env file and update NGINX_PASSWORD manually."
         exit 1
