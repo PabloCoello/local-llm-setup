@@ -24,15 +24,51 @@ if [ ! -f .env ]; then
     
     # Generate random master key
     RANDOM_KEY="sk-$(openssl rand -hex 32)"
-    sed -i "s|LITELLM_MASTER_KEY=.*|LITELLM_MASTER_KEY=$RANDOM_KEY|" .env
+    sed -i.bak "s|LITELLM_MASTER_KEY=.*|LITELLM_MASTER_KEY=$RANDOM_KEY|" .env
     
-    echo "Generated random API key. Check .env file for details."
+    # Generate random password
+    RANDOM_PASSWORD="$(openssl rand -base64 24)"
+    sed -i.bak "s|NGINX_PASSWORD=.*|NGINX_PASSWORD=\"$RANDOM_PASSWORD\"|" .env
+    
+    # Clean up backup files
+    rm -f .env.bak
+    
+    echo "✓ Generated random API key and password"
+    echo "⚠️  IMPORTANT: Save these credentials securely!"
+else
+    echo "⚠️  .env file already exists - keeping existing configuration"
 fi
 
 # Source .env file
 set -a
 source .env
 set +a
+
+# Validate critical environment variables
+if [ -z "$LITELLM_MASTER_KEY" ] || [ "$LITELLM_MASTER_KEY" = "sk-1234-change-me-to-secure-key" ]; then
+    echo "❌ ERROR: LITELLM_MASTER_KEY is not set or uses default insecure value"
+    echo "Please edit .env file and set a secure random key"
+    exit 1
+fi
+
+# Check if NGINX_PASSWORD is empty or unset
+if [ -z "$NGINX_PASSWORD" ]; then
+    echo "❌ ERROR: NGINX_PASSWORD is not set in .env file"
+    echo "Please edit .env file and set a secure password"
+    exit 1
+fi
+
+if [ "$NGINX_PASSWORD" = "change-me-secure-password" ]; then
+    echo "⚠️  WARNING: NGINX_PASSWORD uses default value. Generating random password..."
+    RANDOM_PASSWORD="$(openssl rand -base64 24)"
+    sed -i.bak "s|NGINX_PASSWORD=.*|NGINX_PASSWORD=\"$RANDOM_PASSWORD\"|" .env
+    source .env
+    if [ "$NGINX_PASSWORD" != "$RANDOM_PASSWORD" ]; then
+        echo "❌ ERROR: Failed to update NGINX_PASSWORD in .env file."
+        echo "Please check .env file and update NGINX_PASSWORD manually."
+        exit 1
+    fi
+fi
 
 # Create SSL certificates
 if [ ! -f config/ssl/cert.pem ] || [ ! -f config/ssl/key.pem ]; then
@@ -54,12 +90,27 @@ if [ ! -f config/.htpasswd ]; then
     
     # Check if htpasswd is available
     if command -v htpasswd >/dev/null 2>&1; then
-        htpasswd -cb config/.htpasswd "${NGINX_USER:-admin}" "${NGINX_PASSWORD:-admin}"
+        htpasswd -cb config/.htpasswd "${NGINX_USER:-admin}" "${NGINX_PASSWORD}"
+        echo "✓ Authentication file created with htpasswd"
     else
         # Fallback to openssl if htpasswd is not available
-        echo "${NGINX_USER:-admin}:$(openssl passwd -apr1 ${NGINX_PASSWORD:-admin})" > config/.htpasswd
+        echo "${NGINX_USER:-admin}:$(openssl passwd -apr1 "${NGINX_PASSWORD}")" > config/.htpasswd
+        echo "✓ Authentication file created with openssl"
+        echo "⚠️  WARNING: htpasswd command not found. Consider installing apache2-utils"
     fi
-    echo "Authentication file created."
+    
+    # Verify file was created successfully
+    if [ ! -s config/.htpasswd ]; then
+        echo "❌ ERROR: Failed to create .htpasswd file"
+        exit 1
+    fi
+    
+    # Set restrictive permissions
+    chmod 600 config/.htpasswd
+    
+    echo "✓ Nginx credentials: User=${NGINX_USER:-admin}"
+else
+    echo "✓ Authentication file already exists"
 fi
 
 # Pull required Docker images
