@@ -38,30 +38,37 @@ echo "Checking .env file..."
 if [ ! -f .env ]; then
     error ".env file does not exist. Run ./setup.sh first"
 else
+    set +e
     source .env
-    success ".env file exists"
-    
-    # Check 2: API key is not default
-    if [ -z "$LITELLM_MASTER_KEY" ]; then
-        error "LITELLM_MASTER_KEY is not set in .env"
-    elif [ "$LITELLM_MASTER_KEY" = "sk-1234-change-me-to-secure-key" ] || [ "$LITELLM_MASTER_KEY" = "sk-1234" ]; then
-        error "LITELLM_MASTER_KEY is using default insecure value!"
-        echo "  Generate a new key with: openssl rand -hex 32"
-    elif [ ${#LITELLM_MASTER_KEY} -lt 20 ]; then
-        warning "LITELLM_MASTER_KEY seems too short (< 20 chars)"
+    ENV_STATUS=$?
+    set -e
+    if [ $ENV_STATUS -ne 0 ]; then
+        error "Failed to source .env file. Please check for syntax errors or invalid commands."
     else
-        success "LITELLM_MASTER_KEY is set and appears secure"
-    fi
+        success ".env file exists"
     
-    # Check 3: Nginx password is not default
-    if [ -z "$NGINX_PASSWORD" ]; then
-        error "NGINX_PASSWORD is not set in .env"
-    elif [ "$NGINX_PASSWORD" = "change-me-secure-password" ] || [ "$NGINX_PASSWORD" = "admin" ]; then
-        error "NGINX_PASSWORD is using default insecure value!"
-    elif [ ${#NGINX_PASSWORD} -lt 12 ]; then
-        warning "NGINX_PASSWORD seems too short (< 12 chars)"
-    else
-        success "NGINX_PASSWORD is set and appears secure"
+        # Check 2: API key is not default
+        if [ -z "$LITELLM_MASTER_KEY" ]; then
+            error "LITELLM_MASTER_KEY is not set in .env"
+        elif [ "$LITELLM_MASTER_KEY" = "sk-1234-change-me-to-secure-key" ] || [ "$LITELLM_MASTER_KEY" = "sk-1234" ]; then
+            error "LITELLM_MASTER_KEY is using default insecure value!"
+            echo "  Generate a new key with: openssl rand -hex 32"
+        elif [ ${#LITELLM_MASTER_KEY} -lt 20 ]; then
+            warning "LITELLM_MASTER_KEY seems too short (< 20 chars)"
+        else
+            success "LITELLM_MASTER_KEY is set and appears secure"
+        fi
+        
+        # Check 3: Nginx password is not default
+        if [ -z "$NGINX_PASSWORD" ]; then
+            error "NGINX_PASSWORD is not set in .env"
+        elif [ "$NGINX_PASSWORD" = "change-me-secure-password" ] || [ "$NGINX_PASSWORD" = "admin" ]; then
+            error "NGINX_PASSWORD is using default insecure value!"
+        elif [ ${#NGINX_PASSWORD} -lt 12 ]; then
+            warning "NGINX_PASSWORD seems too short (< 12 chars)"
+        else
+            success "NGINX_PASSWORD is set and appears secure"
+        fi
     fi
 fi
 
@@ -86,15 +93,13 @@ if [ ! -f config/ssl/cert.pem ] || [ ! -f config/ssl/key.pem ]; then
 else
     success "SSL certificates exist"
     
-    # Check if certificates are expired
+    # Check if certificates are expired or expiring soon
     if command -v openssl >/dev/null 2>&1; then
-        EXPIRY=$(openssl x509 -enddate -noout -in config/ssl/cert.pem | cut -d= -f2)
-        EXPIRY_EPOCH=$(date -j -f "%b %d %T %Y %Z" "$EXPIRY" "+%s" 2>/dev/null || date -d "$EXPIRY" "+%s" 2>/dev/null || echo "0")
-        NOW_EPOCH=$(date "+%s")
-        
-        if [ "$EXPIRY_EPOCH" != "0" ] && [ $EXPIRY_EPOCH -lt $NOW_EPOCH ]; then
+        # Check if certificate has expired
+        if ! openssl x509 -checkend 0 -noout -in config/ssl/cert.pem 2>/dev/null; then
             warning "SSL certificate has expired!"
-        elif [ "$EXPIRY_EPOCH" != "0" ] && [ $((EXPIRY_EPOCH - NOW_EPOCH)) -lt 2592000 ]; then
+        # Check if certificate expires in less than 30 days (2592000 seconds)
+        elif ! openssl x509 -checkend 2592000 -noout -in config/ssl/cert.pem 2>/dev/null; then
             warning "SSL certificate expires in less than 30 days"
         else
             success "SSL certificate is valid"
@@ -106,19 +111,19 @@ echo ""
 echo "Checking docker-compose.yml..."
 
 # Check 6: Ports are bound to localhost
-if grep -q '"11434:11434"' docker-compose.yml || grep -q "'11434:11434'" docker-compose.yml; then
+if grep -E -q '(^|\s)['\''"]?11434:11434['\''"]?' docker-compose.yml; then
     error "Ollama port 11434 is exposed to 0.0.0.0 (all interfaces)"
     echo "  Change to: \"127.0.0.1:11434:11434\""
-elif grep -q '"127.0.0.1:11434:11434"' docker-compose.yml || grep -q "'127.0.0.1:11434:11434'" docker-compose.yml; then
+elif grep -E -q '(^|\s)['\''"]?127\.0\.0\.1:11434:11434['\''"]?' docker-compose.yml; then
     success "Ollama port is bound to localhost only"
 else
     warning "Could not verify Ollama port binding"
 fi
 
-if grep -q '"4000:4000"' docker-compose.yml || grep -q "'4000:4000'" docker-compose.yml; then
+if grep -E -q '(^|\s)['\''"]?4000:4000['\''"]?' docker-compose.yml; then
     error "LiteLLM port 4000 is exposed to 0.0.0.0 (all interfaces)"
     echo "  Change to: \"127.0.0.1:4000:4000\""
-elif grep -q '"127.0.0.1:4000:4000"' docker-compose.yml || grep -q "'127.0.0.1:4000:4000'" docker-compose.yml; then
+elif grep -E -q '(^|\s)['\''"]?127\.0\.0\.1:4000:4000['\''"]?' docker-compose.yml; then
     success "LiteLLM port is bound to localhost only"
 else
     warning "Could not verify LiteLLM port binding"
@@ -203,29 +208,34 @@ echo "Checking firewall (if UFW is installed)..."
 
 # Check 13: Firewall status
 if command -v ufw >/dev/null 2>&1; then
-    if sudo ufw status | grep -q "Status: active"; then
-        success "UFW firewall is active"
-        
-        # Check if dangerous ports are blocked
-        if sudo ufw status | grep -q "11434.*ALLOW"; then
-            error "Port 11434 (Ollama) is allowed in firewall"
-            echo "  Block it with: sudo ufw deny 11434"
-        fi
-        
-        if sudo ufw status | grep -q "4000.*ALLOW"; then
-            error "Port 4000 (LiteLLM) is allowed in firewall"
-            echo "  Block it with: sudo ufw deny 4000"
-        fi
-        
-        if sudo ufw status | grep -q "443.*ALLOW"; then
-            success "Port 443 (HTTPS) is allowed"
+    if sudo -n true 2>/dev/null; then
+        if sudo ufw status 2>/dev/null | grep -q "Status: active"; then
+            success "UFW firewall is active"
+            
+            # Check if dangerous ports are blocked
+            if sudo ufw status 2>/dev/null | grep -q "11434.*ALLOW"; then
+                error "Port 11434 (Ollama) is allowed in firewall"
+                echo "  Block it with: sudo ufw deny 11434"
+            fi
+            
+            if sudo ufw status 2>/dev/null | grep -q "4000.*ALLOW"; then
+                error "Port 4000 (LiteLLM) is allowed in firewall"
+                echo "  Block it with: sudo ufw deny 4000"
+            fi
+            
+            if sudo ufw status 2>/dev/null | grep -q "443.*ALLOW"; then
+                success "Port 443 (HTTPS) is allowed"
+            else
+                warning "Port 443 (HTTPS) is not allowed in firewall"
+                echo "  You may want to allow it: sudo ufw allow 443"
+            fi
         else
-            warning "Port 443 (HTTPS) is not allowed in firewall"
-            echo "  You may want to allow it: sudo ufw allow 443"
+            warning "UFW firewall is not active"
+            echo "  Enable it with: sudo ufw enable"
         fi
     else
-        warning "UFW firewall is not active"
-        echo "  Enable it with: sudo ufw enable"
+        warning "Cannot run sudo non-interactively. Skipping firewall checks."
+        echo "  Run this script with sudo access to check firewall status"
     fi
 else
     warning "UFW not installed, skipping firewall checks"

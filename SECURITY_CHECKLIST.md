@@ -234,5 +234,5 @@ docker-compose logs litellm | grep -i "invalid.*key"
 
 ---
 
-**Última actualización:** 7 de noviembre de 2025
+**Última actualización:** 6 de noviembre de 2025
 **Versión:** 1.0
